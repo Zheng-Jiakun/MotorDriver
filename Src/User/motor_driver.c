@@ -185,9 +185,9 @@ void motor_start()
     drv8301_spi_tx_dat = DRV8301_GET_SPI_FRAME(DRV8301_MODE_W, DRV8301_ADDRESS_CONTROL2, 0b00000001100);
     drv8301_spi_sent();
 
-    pid_init(&motor_pid_current, 5, 50, 50, 50.0f, 5.0f, 0.5f);
-    pid_init(&motor_pid_speed, 0, 50, 50, 0.03f, 0.01f, 0.005f);
-    pid_init(&motor_pid_position, 400, 1200, 1000, 1.0f, 0.0f, 0.0f);
+    // pid_init(&motor_pid_current, 5, 50, 50, 50.0f, 5.0f, 0.5f);
+    // pid_init(&motor_pid_speed, 0, 50, 50, 0.03f, 0.01f, 0.005f);
+    // pid_init(&motor_pid_position, 400, 1200, 1000, 1.0f, 0.0f, 0.0f);
 
     motor_change_phase();
 }
@@ -215,16 +215,24 @@ void motor_get_speed()
 {
     static uint8_t filter_cnt = 0;
     static uint32_t speed_rpm_tmp = 0;
+
+    static uint32_t last_position = 0;
+
     speed_rpm_tmp += 60.0f / ((hall_tick_10us - last_hall_tick) / 100000.0f * 14.0f * 3.0f);
     if (filter_cnt >= SPEED_FILTER_SIZE)
     {
-        motor.rpm = (int16_t)(speed_rpm_tmp / (float)SPEED_FILTER_SIZE + 0.5f);
+        if  (last_position < motor.position)
+            motor.rpm = (int16_t)(speed_rpm_tmp / (float)SPEED_FILTER_SIZE + 0.5f);
+        else
+            motor.rpm = -(int16_t)(speed_rpm_tmp / (float)SPEED_FILTER_SIZE + 0.5f);
+
         speed_rpm_tmp = 0;
         filter_cnt = 0;
     }
 
     filter_cnt++;
     last_hall_tick = hall_tick_10us;
+    last_position = motor.position;
 }
 
 void motor_check_0_speed()
@@ -232,7 +240,9 @@ void motor_check_0_speed()
     if (abs(motor.pwm) < 5 && hall_tick_10us - last_hall_tick > ZERO_SPEED_TIMEOUT)
         motor.rpm = 0;
 
-    if (motor.rpm == 0)
+    if (motor.pwm == 0 && motor.rpm != 0)
+        phase_select(0);
+    else if (motor.rpm == 0 && motor.pwm != 0)
         motor_change_phase();
 }
 

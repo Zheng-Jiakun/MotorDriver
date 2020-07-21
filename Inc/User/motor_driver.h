@@ -15,7 +15,7 @@
 extern uint32_t hall_tick_10us;
 
 #define ADC_MEANFILTER_SIZE         100
-#define SPEED_FILTER_SIZE           9
+#define SPEED_FILTER_SIZE           6
 #define ZERO_SPEED_TIMEOUT          10000U
 
 #define DRV8301_MODE_W              0

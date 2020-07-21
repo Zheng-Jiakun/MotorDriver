@@ -4,11 +4,15 @@
 
 pid_t motor_pid;
 
-float motor_current = 0.1f, motor_speed = 0, motor_position;
+float motor_current = 0.1f, motor_speed = 200, motor_position;
 
 void user_setup()
 {
-    motor.pwm = -3;
+    // pid_init(&motor_pid_current, 5, 50, 50, 50.0f, 5.0f, 0.5f);
+    pid_init(&motor_pid_speed, -20, 20, 50, 1.0f, 0.0f, 0.0f);
+    // pid_init(&motor_pid_position, 400, 1200, 1000, 1.0f, 0.0f, 0.0f);
+
+    // motor.pwm = -3;
     motor_start();
 }
 
