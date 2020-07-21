@@ -226,7 +226,7 @@ void motor_get_speed()
 
 void motor_check_0_speed()
 {
-    if (hall_tick_10us - last_hall_tick > ZERO_SPEED_TIMEOUT)
+    if (abs(motor.pwm) < 5 && hall_tick_10us - last_hall_tick > ZERO_SPEED_TIMEOUT)
         motor.rpm = 0;
 }
 
