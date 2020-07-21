@@ -10,6 +10,8 @@ float current_dc_offset;
 
 pid_t motor_pid_current, motor_pid_speed, motor_pid_position;
 
+const uint8_t hall_state_sequence[] = {0, 6, 4, 5, 2, 1, 3, 0};     //map hall states as 1~6 or 6~1
+
 uint8_t read_hall()
 {
     uint8_t hall = 0b000;
@@ -39,7 +41,7 @@ void mosfet_control(uint8_t n, mosfet_state_t s)
         {
             HAL_TIM_PWM_Start(&htim1, TIM_CHANNEL_1);
             HAL_TIMEx_PWMN_Start(&htim1, TIM_CHANNEL_1);
-            __HAL_TIM_SET_COMPARE(&htim1, TIM_CHANNEL_1, PWM_DUTYCYCLE2PULSE(100 - motor.pwm));
+            __HAL_TIM_SET_COMPARE(&htim1, TIM_CHANNEL_1, PWM_DUTYCYCLE2PULSE(100 - abs(motor.pwm)));
         }
         else if (s == HIGH_OFF_LOW_OFF)
         {
@@ -59,7 +61,7 @@ void mosfet_control(uint8_t n, mosfet_state_t s)
         {
             HAL_TIM_PWM_Start(&htim1, TIM_CHANNEL_2);
             HAL_TIMEx_PWMN_Start(&htim1, TIM_CHANNEL_2);
-            __HAL_TIM_SET_COMPARE(&htim1, TIM_CHANNEL_2, PWM_DUTYCYCLE2PULSE(100 - motor.pwm));
+            __HAL_TIM_SET_COMPARE(&htim1, TIM_CHANNEL_2, PWM_DUTYCYCLE2PULSE(100 - abs(motor.pwm)));
         }
         else if (s == HIGH_OFF_LOW_OFF)
         {
@@ -79,7 +81,7 @@ void mosfet_control(uint8_t n, mosfet_state_t s)
         {
             HAL_TIM_PWM_Start(&htim1, TIM_CHANNEL_3);
             HAL_TIMEx_PWMN_Start(&htim1, TIM_CHANNEL_3);
-            __HAL_TIM_SET_COMPARE(&htim1, TIM_CHANNEL_3, PWM_DUTYCYCLE2PULSE(100 - motor.pwm));
+            __HAL_TIM_SET_COMPARE(&htim1, TIM_CHANNEL_3, PWM_DUTYCYCLE2PULSE(100 - abs(motor.pwm)));
         }
         else if (s == HIGH_OFF_LOW_OFF)
         {
@@ -98,105 +100,52 @@ void mosfet_control(uint8_t n, mosfet_state_t s)
 
 void phase_select(uint8_t phase)
 {
-    if (motor.pwm > 0)
+    switch (phase)
     {
-        switch (phase)
-        {
-        case 0:
-            mosfet_control(1, HIGH_OFF_LOW_OFF);
-            mosfet_control(2, HIGH_OFF_LOW_OFF);
-            mosfet_control(3, HIGH_OFF_LOW_OFF);
-            break;
+    case 0:
+        mosfet_control(1, HIGH_OFF_LOW_OFF);
+        mosfet_control(2, HIGH_OFF_LOW_OFF);
+        mosfet_control(3, HIGH_OFF_LOW_OFF);
+        break;
 
-        case 5: //AB
-            mosfet_control(1, HIGH_ON_LOW_OFF);
-            mosfet_control(2, HIGH_OFF_LOW_ON);
-            mosfet_control(3, HIGH_OFF_LOW_OFF);
-            break;
+    case 1: //AB
+        mosfet_control(1, HIGH_ON_LOW_OFF);
+        mosfet_control(2, HIGH_OFF_LOW_ON);
+        mosfet_control(3, HIGH_OFF_LOW_OFF);
+        break;
 
-        case 4: //CB
-            mosfet_control(1, HIGH_OFF_LOW_OFF);
-            mosfet_control(2, HIGH_OFF_LOW_ON);
-            mosfet_control(3, HIGH_ON_LOW_OFF);
-            break;
+    case 2: //CB
+        mosfet_control(1, HIGH_OFF_LOW_OFF);
+        mosfet_control(2, HIGH_OFF_LOW_ON);
+        mosfet_control(3, HIGH_ON_LOW_OFF);
+        break;
 
-        case 6: //CA
-            mosfet_control(1, HIGH_OFF_LOW_ON);
-            mosfet_control(2, HIGH_OFF_LOW_OFF);
-            mosfet_control(3, HIGH_ON_LOW_OFF);
-            break;
+    case 3: //CA
+        mosfet_control(1, HIGH_OFF_LOW_ON);
+        mosfet_control(2, HIGH_OFF_LOW_OFF);
+        mosfet_control(3, HIGH_ON_LOW_OFF);
+        break;
 
-        case 2: //BA
-            mosfet_control(1, HIGH_OFF_LOW_ON);
-            mosfet_control(2, HIGH_ON_LOW_OFF);
-            mosfet_control(3, HIGH_OFF_LOW_OFF);
-            break;
+    case 4: //BA
+        mosfet_control(1, HIGH_OFF_LOW_ON);
+        mosfet_control(2, HIGH_ON_LOW_OFF);
+        mosfet_control(3, HIGH_OFF_LOW_OFF);
+        break;
 
-        case 3: //BC
-            mosfet_control(1, HIGH_OFF_LOW_OFF);
-            mosfet_control(2, HIGH_ON_LOW_OFF);
-            mosfet_control(3, HIGH_OFF_LOW_ON);
-            break;
+    case 5: //BC
+        mosfet_control(1, HIGH_OFF_LOW_OFF);
+        mosfet_control(2, HIGH_ON_LOW_OFF);
+        mosfet_control(3, HIGH_OFF_LOW_ON);
+        break;
 
-        case 1: //AC
-            mosfet_control(1, HIGH_ON_LOW_OFF);
-            mosfet_control(2, HIGH_OFF_LOW_OFF);
-            mosfet_control(3, HIGH_OFF_LOW_ON);
-            break;
+    case 6: //AC
+        mosfet_control(1, HIGH_ON_LOW_OFF);
+        mosfet_control(2, HIGH_OFF_LOW_OFF);
+        mosfet_control(3, HIGH_OFF_LOW_ON);
+        break;
 
-        default:
-            break;
-        }
-    }
-    else
-    {
-        switch (phase)
-        {
-        case 0:
-            mosfet_control(1, HIGH_OFF_LOW_OFF);
-            mosfet_control(2, HIGH_OFF_LOW_OFF);
-            mosfet_control(3, HIGH_OFF_LOW_OFF);
-            break;
-
-        case 5: //AB
-            mosfet_control(1, HIGH_ON_LOW_OFF);
-            mosfet_control(2, HIGH_OFF_LOW_ON);
-            mosfet_control(3, HIGH_OFF_LOW_OFF);
-            break;
-
-        case 1: //CB
-            mosfet_control(1, HIGH_OFF_LOW_OFF);
-            mosfet_control(2, HIGH_OFF_LOW_ON);
-            mosfet_control(3, HIGH_ON_LOW_OFF);
-            break;
-
-        case 3: //CA
-            mosfet_control(1, HIGH_OFF_LOW_ON);
-            mosfet_control(2, HIGH_OFF_LOW_OFF);
-            mosfet_control(3, HIGH_ON_LOW_OFF);
-            break;
-
-        case 2: //BA
-            mosfet_control(1, HIGH_OFF_LOW_ON);
-            mosfet_control(2, HIGH_ON_LOW_OFF);
-            mosfet_control(3, HIGH_OFF_LOW_OFF);
-            break;
-
-        case 6: //BC
-            mosfet_control(1, HIGH_OFF_LOW_OFF);
-            mosfet_control(2, HIGH_ON_LOW_OFF);
-            mosfet_control(3, HIGH_OFF_LOW_ON);
-            break;
-
-        case 4: //AC
-            mosfet_control(1, HIGH_ON_LOW_OFF);
-            mosfet_control(2, HIGH_OFF_LOW_OFF);
-            mosfet_control(3, HIGH_OFF_LOW_ON);
-            break;
-
-        default:
-            break;
-        }
+    default:
+        break;
     }
 }
 
@@ -252,7 +201,10 @@ void motor_stop()
 
 void motor_change_phase()
 {
-    phase_select(read_hall());
+    if (motor.pwm > 0)
+        phase_select(hall_state_sequence[read_hall()]);
+    else if (motor.pwm < 0)
+        phase_select(hall_state_sequence[7 - read_hall()]);
 }
 
 uint32_t last_hall_tick = 0;
@@ -278,22 +230,23 @@ void motor_check_0_speed()
         motor.rpm = 0;
 }
 
-const uint8_t hall_seq[6] = {6, 4, 5, 2, 1, 3};
-
 void motor_get_position()
 {
     static uint8_t last_hall_state;
+    uint8_t current_hall_state = read_hall();
 
-    // motor.position++;
-
-    if (hall_seq[last_hall_state] > hall_seq[read_hall()])
+    if ((hall_state_sequence[current_hall_state] == 1 && hall_state_sequence[last_hall_state] == 6))
         motor.position++;
-    else if (hall_seq[last_hall_state] < hall_seq[read_hall()])
+    else if (hall_state_sequence[current_hall_state] == 6 && hall_state_sequence[last_hall_state] == 1)
+        motor.position--;
+    else if (hall_state_sequence[last_hall_state] < hall_state_sequence[current_hall_state])
+        motor.position++;
+    else if ((hall_state_sequence[last_hall_state] > hall_state_sequence[current_hall_state]))
         motor.position--;
 
-    last_hall_state = read_hall();
+    last_hall_state = current_hall_state;
 
-    motor.degree = HALL2DEGREE(motor.position % 42 + 1);
+    motor.degree = HALL2DEGREE(motor.position % 42);
 }
 
 void adc_filter()

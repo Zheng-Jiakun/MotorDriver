@@ -8,7 +8,7 @@ float motor_current = 0.1f, motor_speed = 0, motor_position;
 
 void user_setup()
 {
-    motor.pwm = 10;
+    motor.pwm = -3;
     motor_start();
 }
 

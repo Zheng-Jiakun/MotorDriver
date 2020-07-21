@@ -9,6 +9,8 @@
 #include "adc.h"
 #include "algorithm.h"
 #include "user_main.h"
+#include <stdlib.h>
+
 
 extern uint32_t hall_tick_10us;
 
@@ -49,7 +51,7 @@ typedef struct {
     int16_t rpm;
     float current;
     uint32_t position;
-    uint16_t degree;
+    float degree;
 } motor_t;
 
 extern pid_t motor_pid_current, motor_pid_speed, motor_pid_position;
