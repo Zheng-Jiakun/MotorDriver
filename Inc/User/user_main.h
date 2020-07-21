@@ -3,6 +3,8 @@
 
 #include "main.h"
 
+extern float motor_current, motor_speed, motor_position;
+
 void user_setup();
 void user_loop();
 

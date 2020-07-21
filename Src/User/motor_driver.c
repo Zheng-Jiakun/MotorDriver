@@ -237,7 +237,7 @@ void motor_get_speed()
 
 void motor_check_0_speed()
 {
-    if (abs(motor.pwm) < 5 && hall_tick_10us - last_hall_tick > ZERO_SPEED_TIMEOUT)
+    if (abs(motor.pwm) < 20 && hall_tick_10us - last_hall_tick > ZERO_SPEED_TIMEOUT)
         motor.rpm = 0;
 
     if (motor.pwm == 0 && motor.rpm != 0)
@@ -294,4 +294,9 @@ void motor_current_loop(float set)
 void motor_speed_loop(float set)
 {
     motor.pwm = pid_calc(&motor_pid_speed, motor.rpm, set);
+}
+
+void motor_position_loop(float set)
+{
+    motor.pwm = pid_calc(&motor_pid_position, motor.position, set);
 }

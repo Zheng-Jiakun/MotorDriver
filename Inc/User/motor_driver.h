@@ -15,7 +15,7 @@
 extern uint32_t hall_tick_10us;
 
 #define ADC_MEANFILTER_SIZE         100
-#define SPEED_FILTER_SIZE           6
+#define SPEED_FILTER_SIZE           9
 #define ZERO_SPEED_TIMEOUT          10000U
 
 #define DRV8301_MODE_W              0
@@ -39,6 +39,7 @@ extern uint32_t hall_tick_10us;
 // #define DRV8301_VOLTAGE2CURRENT(x)  (-5.2726f*(x)+8.4632+CURRENT_LINEAR_OFFSET)
 
 #define HALL2DEGREE(x)              (360.0f/42.0f*(x))
+#define DEGREE2HALL(x)              ((x)*42.0f/360.0f)
 
 typedef enum {
     HIGH_ON_LOW_OFF = 0,
