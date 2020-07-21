@@ -197,6 +197,9 @@ void motor_stop()
     phase_select(0);
 
     HAL_GPIO_WritePin(DRV8301_ENGATE_GPIO_Port, DRV8301_ENGATE_Pin, GPIO_PIN_RESET);
+
+    HAL_ADC_Stop_DMA(&hadc1);
+    HAL_TIM_Base_Stop_IT(&htim3);
 }
 
 void motor_change_phase()
@@ -228,6 +231,9 @@ void motor_check_0_speed()
 {
     if (abs(motor.pwm) < 5 && hall_tick_10us - last_hall_tick > ZERO_SPEED_TIMEOUT)
         motor.rpm = 0;
+
+    if (motor.rpm == 0)
+        motor_change_phase();
 }
 
 void motor_get_position()
