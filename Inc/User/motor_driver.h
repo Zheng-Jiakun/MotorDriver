@@ -51,7 +51,7 @@ typedef struct {
     int8_t pwm;
     int16_t rpm;
     float current;
-    uint32_t position;
+    int32_t position;
     float degree;
 } motor_t;
 

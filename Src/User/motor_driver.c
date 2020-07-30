@@ -189,7 +189,7 @@ void motor_start()
     // pid_init(&motor_pid_speed, 0, 50, 50, 0.03f, 0.01f, 0.005f);
     // pid_init(&motor_pid_position, 400, 1200, 1000, 1.0f, 0.0f, 0.0f);
 
-    // motor_change_phase();
+    motor_change_phase();
 }
 
 void motor_stop()
