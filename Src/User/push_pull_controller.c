@@ -1,67 +1,84 @@
 #include "push_pull_controller.h"
 
 uint8_t calibrated_flag = 0;
+int16_t push_limit_position, pull_limit_position;
 
-void position_calibrate ()
+void push_pull_init()
 {
-    // static uint32_t stuck_position = 0, stuck_start_tick = 0;
-    // static uint8_t stuck_start_flag = 0;
-    // if (abs(motor.position - stuck_position) < 3 && stuck_start_flag == 0)
-    // {
-    //     stuck_start_flag = 1;
-    //     stuck_start_tick = HAL_GetTick();
-    // }
-    // else if (HAL_GetTick() - stuck_start_tick > 100 && stuck_start_flag == 1)
-    // {
-    //     motor.pwm = -motor.pwm;
-    //     stuck_start_flag = 0;
-    // }
-    // else
-    // {
-    //     stuck_start_flag = 0;
-    // }
-    // stuck_position == motor.position;
+    motor.pwm = CALIBRATING_SPEED;
+}
 
-
-    // static uint32_t last_position = 0;
-    static uint8_t stuck_flag = 0;
-    // if (abs(last_position - motor.position) < 30 && stuck_flag == 0)
-    // {
-    //     motor.pwm = -motor.pwm;
-    //     stuck_flag = 1;
-    // }
-    // if (stuck_flag == 1 && abs(motor.rpm) > 30)
-    // {
-    //     stuck_flag = 0;
-    // }
-    // last_position = motor.position;
-    // HAL_Delay(500);
-
-    // if (abs(motor.rpm) < 10 && stuck_flag == 0)
-    // {
-    //     motor.pwm = -motor.pwm;
-    //     stuck_flag = 1;
-    // }
-    // else if (abs(motor.rpm > 10))
-    // {
-    //     stuck_flag = 0;
-    // }
-
-    if (motor.current > 2.6f && stuck_flag == 0)
+void position_calibrate()
+{
+    static uint8_t stuck_flag = 0, hit_count = 0;
+    if (motor.current > CURRENT_UPPER_LIMIT && stuck_flag == 0)
     {
         motor.pwm = -motor.pwm;
+
+        if (hit_count % 2)
+            pull_limit_position = motor.position;
+        else
+            push_limit_position = motor.position;
+
+        stuck_flag = 1;
+        hit_count++;
+    }
+    else if (motor.current < CURRENT_LOWER_LIMIT)
+    {
+        stuck_flag = 0;
+
+        if (push_limit_position - pull_limit_position > POSITION_DIFFERENCE)
+            calibrated_flag = 1;
+    }
+}
+
+void set_motor_pwm(int8_t pwm)
+{
+    if (motor.pwm > pwm)
+        motor.pwm--;
+    else if (motor.pwm < pwm)
+        motor.pwm++;
+}
+
+void normal_testing()
+{
+    static uint8_t stuck_flag = 0;
+    static int8_t motor_pwm = 0;
+
+    if (motor.position > (push_limit_position - POSITION_TOLERANCE) && stuck_flag == 0)
+    {
+        motor_pwm = -NORMAL_SPEED;
         stuck_flag = 1;
     }
-    else if (motor.current < 1.0f)
+    else if ((motor.position < pull_limit_position + POSITION_TOLERANCE) && stuck_flag == 0)
+    {
+        motor_pwm = NORMAL_SPEED;
+        stuck_flag = 1;
+    }
+    else if (motor.position < (push_limit_position - 2 * POSITION_TOLERANCE) && motor.position > (pull_limit_position + 2 * POSITION_TOLERANCE))
     {
         stuck_flag = 0;
     }
 
-    /*
-    12v
-    pwm 10 => 0.6 ~ 0.9
-    pwm 20 => 0.8 ~ 1.5
-    pwm 30 => 1.0 ~ 2.6
-    pwm 40 => 
-    */
+    set_motor_pwm(motor_pwm);
+    HAL_Delay(1);
+
+    // static uint8_t stuck_flag = 0;
+    // if ((motor.position > 500 || motor.position < -500) && stuck_flag == 0)
+    // {
+    //     motor.pwm = -motor.pwm;
+    //     stuck_flag = 1;
+    // }
+    // else if (motor.position < 480 && motor.position > -480)
+    // {
+    //     stuck_flag = 0;
+    // }
+}
+
+void testing_thread()
+{
+    if (calibrated_flag == 0)
+        position_calibrate();
+    else
+        normal_testing();
 }
