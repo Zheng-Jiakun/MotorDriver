@@ -10,6 +10,7 @@
 #include "algorithm.h"
 #include "user_main.h"
 #include <stdlib.h>
+#include <math.h>
 
 
 extern uint32_t hall_tick_10us;
@@ -38,6 +39,13 @@ extern uint32_t hall_tick_10us;
 // #define DRV8301_VOLTAGE2CURRENT(x)  (-10.068f*(x)+16.037+CURRENT_LINEAR_OFFSET)
 // #define DRV8301_VOLTAGE2CURRENT(x)  (-5.2726f*(x)+8.4632+CURRENT_LINEAR_OFFSET)
 
+#define ADC_CHANNEL_NUM             2
+#define ADC_CURRENT_CHANNEL         0
+#define ADC_TEMPERATURE_CHANNEL     1
+
+#define ADC2RES(x) ((x)*1e4 / (4095 - (x)))
+#define RES2TEMP(x) (3435.0f / ((3435.0f / 298.15f) - log(1e4 / (x))) - 273.15f)
+
 #define HALL2DEGREE(x)              (360.0f/42.0f*(x))
 #define DEGREE2HALL(x)              ((x)*42.0f/360.0f)
 
@@ -53,6 +61,7 @@ typedef struct {
     float current;
     int32_t position;
     float degree;
+    float temperature;
 } motor_t;
 
 extern pid_t motor_pid_current, motor_pid_speed, motor_pid_position;
@@ -63,6 +72,7 @@ void motor_change_phase();
 void motor_get_speed();
 void motor_check_0_speed();
 void motor_get_current();
+void motor_get_temperature();
 void motor_get_position();
 void motor_current_loop(float set);
 void motor_speed_loop(float set);

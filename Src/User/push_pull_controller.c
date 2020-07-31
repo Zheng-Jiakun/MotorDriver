@@ -35,9 +35,9 @@ void position_calibrate()
 void set_motor_pwm(int8_t pwm)
 {
     if (motor.pwm > pwm)
-        motor.pwm--;
+        motor.pwm -= (motor.pwm - pwm) * 0.25f + 0.5f;
     else if (motor.pwm < pwm)
-        motor.pwm++;
+        motor.pwm += (pwm - motor.pwm) * 0.25f + 0.5f;
 }
 
 void normal_testing()
@@ -61,18 +61,7 @@ void normal_testing()
     }
 
     set_motor_pwm(motor_pwm);
-    HAL_Delay(1);
-
-    // static uint8_t stuck_flag = 0;
-    // if ((motor.position > 500 || motor.position < -500) && stuck_flag == 0)
-    // {
-    //     motor.pwm = -motor.pwm;
-    //     stuck_flag = 1;
-    // }
-    // else if (motor.position < 480 && motor.position > -480)
-    // {
-    //     stuck_flag = 0;
-    // }
+    // HAL_Delay(1);
 }
 
 void testing_thread()

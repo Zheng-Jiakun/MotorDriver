@@ -5,12 +5,12 @@ motor_t motor;
 uint32_t hall_tick_10us;
 
 uint16_t drv8301_spi_rx_dat, drv8301_spi_tx_dat;
-uint16_t adc_result_raw, adc_result;
+uint16_t adc_result_raw[ADC_CHANNEL_NUM], adc_result[ADC_CHANNEL_NUM];
 float current_dc_offset;
 
 pid_t motor_pid_current, motor_pid_speed, motor_pid_position;
 
-const uint8_t hall_state_sequence[] = {0, 6, 4, 5, 2, 1, 3, 0};     //map hall states as 1~6 or 6~1
+const uint8_t hall_state_sequence[] = {0, 6, 4, 5, 2, 1, 3, 0}; //map hall states as 1~6 or 6~1
 
 uint8_t read_hall()
 {
@@ -176,7 +176,7 @@ void motor_start()
     drv8301_spi_tx_dat = DRV8301_GET_SPI_FRAME(DRV8301_MODE_W, DRV8301_ADDRESS_CONTROL2, 0b00000011100);
     drv8301_spi_sent();
 
-    HAL_ADC_Start_DMA(&hadc1, (uint32_t *)&adc_result_raw, 1);
+    HAL_ADC_Start_DMA(&hadc1, (uint32_t *)adc_result_raw, ADC_CHANNEL_NUM);
     HAL_TIM_Base_Start_IT(&htim3);
 
     HAL_Delay(5);
@@ -221,7 +221,7 @@ void motor_get_speed()
     speed_rpm_tmp += 60.0f / ((hall_tick_10us - last_hall_tick) / 100000.0f * 14.0f * 3.0f);
     if (filter_cnt >= SPEED_FILTER_SIZE)
     {
-        if  (last_position < motor.position)
+        if (last_position < motor.position)
             motor.rpm = (int16_t)(speed_rpm_tmp / (float)SPEED_FILTER_SIZE + 0.5f);
         else
             motor.rpm = -(int16_t)(speed_rpm_tmp / (float)SPEED_FILTER_SIZE + 0.5f);
@@ -267,22 +267,34 @@ void motor_get_position()
 
 void adc_filter()
 {
-    static uint32_t adc_result_sum = 0;
+    static uint32_t adc_result_sum[ADC_CHANNEL_NUM];
     static uint16_t adc_filter_cnt = 0;
-    adc_result_sum += adc_result_raw;
+
+    for (uint8_t i = 0; i < ADC_CHANNEL_NUM; i++)
+        adc_result_sum[i] += adc_result_raw[i];
+
     adc_filter_cnt++;
     if (adc_filter_cnt > ADC_MEANFILTER_SIZE)
     {
-        adc_result = (uint16_t)((float)adc_result_sum / ADC_MEANFILTER_SIZE + 0.5);
-        adc_result_sum = 0;
+        for (uint8_t i = 0; i < ADC_CHANNEL_NUM; i++)
+        {
+            adc_result[i] = (uint16_t)((float)adc_result_sum[i] / ADC_MEANFILTER_SIZE + 0.5);
+            adc_result_sum[i] = 0;
+        }
         adc_filter_cnt = 0;
         motor_get_current();
+        motor_get_temperature();
     }
+}
+
+void motor_get_temperature()
+{
+    motor.temperature = RES2TEMP(ADC2RES(adc_result_raw[ADC_TEMPERATURE_CHANNEL]));
 }
 
 void motor_get_current()
 {
-    motor.current = DRV8301_VOLTAGE2CURRENT(ADC2VOLTAGE(adc_result)) - current_dc_offset;
+    motor.current = DRV8301_VOLTAGE2CURRENT(ADC2VOLTAGE(adc_result[ADC_CURRENT_CHANNEL])) - current_dc_offset;
     // motor.current = ADC2VOLTAGE(adc_result);
 }
 
