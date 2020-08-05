@@ -58,6 +58,8 @@ void Error_Handler(void);
 /* USER CODE END EFP */
 
 /* Private defines -----------------------------------------------------------*/
+#define SPI1_CS_Pin GPIO_PIN_4
+#define SPI1_CS_GPIO_Port GPIOA
 #define DRV8301_POWERGD_Pin GPIO_PIN_10
 #define DRV8301_POWERGD_GPIO_Port GPIOB
 #define DRV8301_OC_Pin GPIO_PIN_11

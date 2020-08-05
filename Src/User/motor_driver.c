@@ -152,22 +152,22 @@ void phase_select(uint8_t phase)
 void drv8301_spi_sent()
 {
     HAL_GPIO_WritePin(DRV8301_SPISS_GPIO_Port, DRV8301_SPISS_Pin, GPIO_PIN_RESET);
-    HAL_Delay(1);
+    // HAL_Delay(1);
     HAL_SPI_Transmit(&hspi1, (uint8_t *)&drv8301_spi_tx_dat, 1, 100);
-    HAL_Delay(1);
+    // HAL_Delay(1);
     HAL_GPIO_WritePin(DRV8301_SPISS_GPIO_Port, DRV8301_SPISS_Pin, GPIO_PIN_SET);
     HAL_Delay(1);
     HAL_GPIO_WritePin(DRV8301_SPISS_GPIO_Port, DRV8301_SPISS_Pin, GPIO_PIN_RESET);
-    HAL_Delay(1);
+    // HAL_Delay(1);
     HAL_SPI_Receive(&hspi1, (uint8_t *)&drv8301_spi_rx_dat, 1, 100);
-    HAL_Delay(1);
+    // HAL_Delay(1);
     HAL_GPIO_WritePin(DRV8301_SPISS_GPIO_Port, DRV8301_SPISS_Pin, GPIO_PIN_SET);
 }
 
 void motor_start()
 {
-    while (read_hall() == 0b000 || read_hall() == 0b111)
-        ;
+    // while (read_hall() == 0b000 || read_hall() == 0b111)
+    //     ;
 
     HAL_SPI_Transmit(&hspi1, (uint8_t *)&drv8301_spi_tx_dat, 1, 100); //dummy transmition to make the clock low
 

@@ -25,6 +25,7 @@
 /* USER CODE BEGIN Includes */
 #include "motor_driver.h"
 #include "user_main.h"
+#include "spi_protocol.h"
 /* USER CODE END Includes */
 
 /* Private typedef -----------------------------------------------------------*/
@@ -258,7 +259,8 @@ void TIM4_IRQHandler(void)
   /* USER CODE END TIM4_IRQn 0 */
   HAL_TIM_IRQHandler(&htim4);
   /* USER CODE BEGIN TIM4_IRQn 1 */
-  
+  spi_encode_decode();
+  // spi_sent();
   /* USER CODE END TIM4_IRQn 1 */
 }
 

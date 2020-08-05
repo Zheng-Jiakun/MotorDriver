@@ -78,5 +78,4 @@ void motor_current_loop(float set);
 void motor_speed_loop(float set);
 void motor_position_loop(float set);
 void adc_filter();
-
 #endif

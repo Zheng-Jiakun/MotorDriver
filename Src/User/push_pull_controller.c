@@ -3,8 +3,11 @@
 uint8_t calibrated_flag = 0;
 int16_t push_limit_position, pull_limit_position;
 
+working_state_t working_state;
+
 void push_pull_init()
 {
+    pid_init(&motor_pid_speed, -30, 30, 50, 0.015f, 0.003f, 0.0f);
     motor.pwm = CALIBRATING_SPEED;
 }
 
@@ -43,16 +46,19 @@ void set_motor_pwm(int8_t pwm)
 void normal_testing()
 {
     static uint8_t stuck_flag = 0;
-    static int8_t motor_pwm = 0;
+    // static int8_t motor_pwm = 0;
+    static int16_t motor_rpm = 0;
 
     if (motor.position > (push_limit_position - POSITION_TOLERANCE) && stuck_flag == 0)
     {
-        motor_pwm = -NORMAL_SPEED;
+        // motor_pwm = -NORMAL_SPEED;
+        motor_rpm = -NORMAL_RPM;
         stuck_flag = 1;
     }
     else if ((motor.position < pull_limit_position + POSITION_TOLERANCE) && stuck_flag == 0)
     {
-        motor_pwm = NORMAL_SPEED;
+        // motor_pwm = NORMAL_SPEED;
+        motor_rpm = NORMAL_RPM;
         stuck_flag = 1;
     }
     else if (motor.position < (push_limit_position - 2 * POSITION_TOLERANCE) && motor.position > (pull_limit_position + 2 * POSITION_TOLERANCE))
@@ -60,8 +66,9 @@ void normal_testing()
         stuck_flag = 0;
     }
 
-    set_motor_pwm(motor_pwm);
-    // HAL_Delay(1);
+    // set_motor_pwm(motor_pwm);
+    motor_speed_loop(motor_rpm);
+    HAL_Delay(10);
 }
 
 void testing_thread()
