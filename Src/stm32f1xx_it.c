@@ -67,7 +67,7 @@ extern TIM_HandleTypeDef htim4;
 /* USER CODE END EV */
 
 /******************************************************************************/
-/*           Cortex-M3 Processor Interruption and Exception Handlers          */ 
+/*           Cortex-M3 Processor Interruption and Exception Handlers          */
 /******************************************************************************/
 /**
   * @brief This function handles Non maskable interrupt.
@@ -208,11 +208,11 @@ void SysTick_Handler(void)
 void DMA1_Channel1_IRQHandler(void)
 {
   /* USER CODE BEGIN DMA1_Channel1_IRQn 0 */
-
+  adc_filter();
   /* USER CODE END DMA1_Channel1_IRQn 0 */
   HAL_DMA_IRQHandler(&hdma_adc1);
   /* USER CODE BEGIN DMA1_Channel1_IRQn 1 */
-  adc_filter();
+
   /* USER CODE END DMA1_Channel1_IRQn 1 */
 }
 
@@ -223,14 +223,16 @@ void EXTI9_5_IRQHandler(void)
 {
   /* USER CODE BEGIN EXTI9_5_IRQn 0 */
 
+  motor_change_phase();
+  motor_get_speed();
+  motor_get_position();
+
   /* USER CODE END EXTI9_5_IRQn 0 */
   HAL_GPIO_EXTI_IRQHandler(GPIO_PIN_6);
   HAL_GPIO_EXTI_IRQHandler(GPIO_PIN_7);
   HAL_GPIO_EXTI_IRQHandler(GPIO_PIN_8);
   /* USER CODE BEGIN EXTI9_5_IRQn 1 */
-  motor_change_phase();
-  motor_get_speed();
-  motor_get_position();
+
   /* USER CODE END EXTI9_5_IRQn 1 */
 }
 
@@ -241,11 +243,20 @@ void TIM3_IRQHandler(void)
 {
   /* USER CODE BEGIN TIM3_IRQn 0 */
 
+  motor_check_0_speed();
+  spi_encode_decode();
+
+  static uint8_t cnt = 0;
+  if (cnt++ > 5)
+  {
+    cnt = 0;
+    motor_adjust_pwm();
+  }
+
   /* USER CODE END TIM3_IRQn 0 */
   HAL_TIM_IRQHandler(&htim3);
   /* USER CODE BEGIN TIM3_IRQn 1 */
-  hall_tick_10us++;
-  motor_check_0_speed();
+
   /* USER CODE END TIM3_IRQn 1 */
 }
 
@@ -256,11 +267,12 @@ void TIM4_IRQHandler(void)
 {
   /* USER CODE BEGIN TIM4_IRQn 0 */
 
+  hall_tick_10us++;
+
   /* USER CODE END TIM4_IRQn 0 */
   HAL_TIM_IRQHandler(&htim4);
   /* USER CODE BEGIN TIM4_IRQn 1 */
-  spi_encode_decode();
-  // spi_sent();
+
   /* USER CODE END TIM4_IRQn 1 */
 }
 

@@ -25,11 +25,11 @@ void spi_encode()
         break;
 
     case 2:
-        spi_tx_data = HEADER_ID_RPM << FRAME_DATA_LENGTH | (motor.rpm & 0xfff);
+        spi_tx_data = HEADER_ID_RPM << FRAME_DATA_LENGTH | ((motor.rpm + 2048) & 0xfff);
         break;
 
     case 3:
-        spi_tx_data = HEADER_ID_CMD << FRAME_DATA_LENGTH | (working_state & 0xfff);
+        spi_tx_data = HEADER_ID_STATUS << FRAME_DATA_LENGTH | (feedback_state & 0xfff);
         break;
 
     default:
@@ -47,12 +47,16 @@ void spi_decode()
 
     switch (header)
     {
-    case HEADER_ID_PWM:
-        motor.pwm = data;
+    case HEADER_ID_SPEED:
+        speed_control = data;
+        break;
+
+    case HEADER_ID_MODE:
+        working_mode = data;
         break;
 
     case HEADER_ID_CMD:
-        working_state = data;
+        working_command = data;
         break;
 
     default:

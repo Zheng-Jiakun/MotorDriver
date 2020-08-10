@@ -1,7 +1,7 @@
 #ifndef MOTOR_DRIVER
 #define MOTOR_DRIVER
 
-#define PWM_DUTYCYCLE2PULSE(x)      ((float)(x)/100.0f*63)
+#define PWM_DUTYCYCLE2PULSE(x)      ((float)(x)/100.0f*4500)
 
 #include "main.h"
 #include "tim.h"
@@ -15,7 +15,7 @@
 
 extern uint32_t hall_tick_10us;
 
-#define ADC_MEANFILTER_SIZE         100
+#define ADC_MEANFILTER_SIZE         10
 #define SPEED_FILTER_SIZE           9
 #define ZERO_SPEED_TIMEOUT          10000U
 
@@ -31,11 +31,11 @@ extern uint32_t hall_tick_10us;
 
 #define DRV8301_GET_SPI_FRAME(rw, address, data)   ((rw) << DRV8301_RW_BIT_OFFSET) | ((address) << DRV8301_ADDRESS_BIT_OFFSET | (data))
 
-#define DRV8301_CURRENT_AMP_GAIN    80.0f
+#define DRV8301_CURRENT_AMP_GAIN    80
 #define CURRENT_SAMPLE_RES          0.002f
 #define ADC2VOLTAGE(x)              ((x)/4095.0f*3.3f)
-#define CURRENT_LINEAR_OFFSET       -0.01f
-#define DRV8301_VOLTAGE2CURRENT(x)  ((1.65f-(x))/DRV8301_CURRENT_AMP_GAIN/(CURRENT_SAMPLE_RES)+CURRENT_LINEAR_OFFSET)
+#define CURRENT_LINEAR_OFFSET       -0.09f
+#define DRV8301_VOLTAGE2CURRENT(x)  ((1.65f-(x))/(float)DRV8301_CURRENT_AMP_GAIN/(CURRENT_SAMPLE_RES)+CURRENT_LINEAR_OFFSET)
 // #define DRV8301_VOLTAGE2CURRENT(x)  (-10.068f*(x)+16.037+CURRENT_LINEAR_OFFSET)
 // #define DRV8301_VOLTAGE2CURRENT(x)  (-5.2726f*(x)+8.4632+CURRENT_LINEAR_OFFSET)
 
@@ -48,6 +48,8 @@ extern uint32_t hall_tick_10us;
 
 #define HALL2DEGREE(x)              (360.0f/42.0f*(x))
 #define DEGREE2HALL(x)              ((x)*42.0f/360.0f)
+
+#define LOOP_CONTROL_PERIOD         50
 
 typedef enum {
     HIGH_ON_LOW_OFF = 0,
@@ -78,4 +80,5 @@ void motor_current_loop(float set);
 void motor_speed_loop(float set);
 void motor_position_loop(float set);
 void adc_filter();
+void motor_adjust_pwm();
 #endif

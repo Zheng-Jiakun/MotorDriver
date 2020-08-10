@@ -10,9 +10,10 @@ extern uint16_t spi_rx_data, spi_tx_data;
 #define HEADER_ID_TEMPERATURE            0
 #define HEADER_ID_POSITION               1
 #define HEADER_ID_RPM                    2
-#define HEADER_ID_PWM                    3
+#define HEADER_ID_SPEED                  3
 #define HEADER_ID_STATUS                 4
-#define HEADER_ID_CMD                    5
+#define HEADER_ID_MODE                   5
+#define HEADER_ID_CMD                    6
 
 #define FRAME_HEADER_LENGTH              4
 #define FRAME_DATA_LENGTH                12
