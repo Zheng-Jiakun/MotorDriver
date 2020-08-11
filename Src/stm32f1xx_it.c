@@ -67,7 +67,7 @@ extern TIM_HandleTypeDef htim4;
 /* USER CODE END EV */
 
 /******************************************************************************/
-/*           Cortex-M3 Processor Interruption and Exception Handlers          */
+/*           Cortex-M3 Processor Interruption and Exception Handlers          */ 
 /******************************************************************************/
 /**
   * @brief This function handles Non maskable interrupt.
@@ -223,7 +223,7 @@ void EXTI9_5_IRQHandler(void)
 {
   /* USER CODE BEGIN EXTI9_5_IRQn 0 */
 
-  motor_change_phase();
+  motor_switch_phase();
   motor_get_speed();
   motor_get_position();
 
@@ -246,6 +246,8 @@ void TIM3_IRQHandler(void)
   motor_check_0_speed();
   spi_encode_decode();
 
+  motor_adjust_pwm();
+  
   /* USER CODE END TIM3_IRQn 0 */
   HAL_TIM_IRQHandler(&htim3);
   /* USER CODE BEGIN TIM3_IRQn 1 */

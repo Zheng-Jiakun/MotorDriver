@@ -70,7 +70,7 @@ extern pid_t motor_pid_current, motor_pid_speed, motor_pid_position;
 extern motor_t motor;
 
 void motor_start();
-void motor_change_phase();
+void motor_switch_phase();
 void motor_get_speed();
 void motor_check_0_speed();
 void motor_get_current();

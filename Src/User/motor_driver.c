@@ -10,6 +10,8 @@ float current_dc_offset;
 
 pid_t motor_pid_current, motor_pid_speed, motor_pid_position;
 
+int8_t motor_pwm = 0;
+
 const uint8_t hall_state_sequence[] = {0, 6, 4, 5, 2, 1, 3, 0}; //map hall states as 1~6 or 6~1
 
 uint8_t read_hall()
@@ -41,7 +43,7 @@ void mosfet_control(uint8_t n, mosfet_state_t s)
         {
             HAL_TIM_PWM_Start(&htim1, TIM_CHANNEL_1);
             HAL_TIMEx_PWMN_Start(&htim1, TIM_CHANNEL_1);
-            __HAL_TIM_SET_COMPARE(&htim1, TIM_CHANNEL_1, PWM_DUTYCYCLE2PULSE(100 - abs(motor.pwm)));
+            __HAL_TIM_SET_COMPARE(&htim1, TIM_CHANNEL_1, PWM_DUTYCYCLE2PULSE(100 - abs(motor_pwm)));
         }
         else if (s == HIGH_OFF_LOW_OFF)
         {
@@ -61,7 +63,7 @@ void mosfet_control(uint8_t n, mosfet_state_t s)
         {
             HAL_TIM_PWM_Start(&htim1, TIM_CHANNEL_2);
             HAL_TIMEx_PWMN_Start(&htim1, TIM_CHANNEL_2);
-            __HAL_TIM_SET_COMPARE(&htim1, TIM_CHANNEL_2, PWM_DUTYCYCLE2PULSE(100 - abs(motor.pwm)));
+            __HAL_TIM_SET_COMPARE(&htim1, TIM_CHANNEL_2, PWM_DUTYCYCLE2PULSE(100 - abs(motor_pwm)));
         }
         else if (s == HIGH_OFF_LOW_OFF)
         {
@@ -81,7 +83,7 @@ void mosfet_control(uint8_t n, mosfet_state_t s)
         {
             HAL_TIM_PWM_Start(&htim1, TIM_CHANNEL_3);
             HAL_TIMEx_PWMN_Start(&htim1, TIM_CHANNEL_3);
-            __HAL_TIM_SET_COMPARE(&htim1, TIM_CHANNEL_3, PWM_DUTYCYCLE2PULSE(100 - abs(motor.pwm)));
+            __HAL_TIM_SET_COMPARE(&htim1, TIM_CHANNEL_3, PWM_DUTYCYCLE2PULSE(100 - abs(motor_pwm)));
         }
         else if (s == HIGH_OFF_LOW_OFF)
         {
@@ -191,7 +193,7 @@ void motor_start()
     // pid_init(&motor_pid_speed, 0, 50, 50, 0.03f, 0.01f, 0.005f);
     // pid_init(&motor_pid_position, 400, 1200, 1000, 1.0f, 0.0f, 0.0f);
 
-    // motor_change_phase();
+    // motor_switch_phase();
 }
 
 void motor_stop()
@@ -205,11 +207,11 @@ void motor_stop()
     HAL_TIM_Base_Stop_IT(&htim4);
 }
 
-void motor_change_phase()
+void motor_switch_phase()
 {
-    if (motor.pwm >= 0)
+    if (motor_pwm >= 0)
         phase_select(hall_state_sequence[read_hall()]);
-    else if (motor.pwm < 0)
+    else if (motor_pwm < 0)
         phase_select(hall_state_sequence[7 - read_hall()]);
 }
 
@@ -243,15 +245,15 @@ void motor_check_0_speed()
     if (hall_tick_10us - last_hall_tick > ZERO_SPEED_TIMEOUT)
         motor.rpm = 0;
 
-    // if (motor.pwm == 0 && motor.rpm != 0)
+    // if (motor_pwm == 0 && motor.rpm != 0)
     //     phase_select(0);
-    // else if (motor.rpm == 0 && motor.pwm != 0)
-    //     motor_change_phase();
+    // else if (motor.rpm == 0 && motor_pwm != 0)
+    //     motor_switch_phase();
 
     static int8_t last_pwm = 0;
-    if (last_pwm != motor.pwm)
-        motor_change_phase();
-    last_pwm = motor.pwm;
+    if (last_pwm != motor_pwm)
+        motor_switch_phase();
+    last_pwm = motor_pwm;
 }
 
 void motor_get_position()
@@ -319,4 +321,12 @@ void motor_speed_loop(float set)
 void motor_position_loop(float set)
 {
     motor.pwm = pid_calc(&motor_pid_position, motor.position, set);
+}
+
+void motor_adjust_pwm ()
+{
+    if (motor.pwm > motor_pwm)
+        motor_pwm++;
+    else if (motor.pwm < motor_pwm)
+        motor_pwm--;
 }

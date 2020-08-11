@@ -11,7 +11,7 @@ extern int16_t motor_position;
 #define ADJUST_SPEED        10
 #define MANUAL_SPEED        15
 
-#define NORMAL_RPM          1000
+#define TESTING_RPM         1000
 
 #define POSITION_DIFFERENCE 3600
 #define POSITION_TOLERANCE  250
