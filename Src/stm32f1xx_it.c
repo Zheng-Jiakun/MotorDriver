@@ -246,13 +246,6 @@ void TIM3_IRQHandler(void)
   motor_check_0_speed();
   spi_encode_decode();
 
-  static uint8_t cnt = 0;
-  if (cnt++ > 5)
-  {
-    cnt = 0;
-    motor_adjust_pwm();
-  }
-
   /* USER CODE END TIM3_IRQn 0 */
   HAL_TIM_IRQHandler(&htim3);
   /* USER CODE BEGIN TIM3_IRQn 1 */

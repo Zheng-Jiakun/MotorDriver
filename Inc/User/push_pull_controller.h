@@ -6,28 +6,30 @@
 
 extern int16_t motor_position;
 
-#define CALIBRATING_SPEED   15
+#define CALIBRATING_SPEED   30
 #define RUNNING_SPEED       40
 #define ADJUST_SPEED        10
 #define MANUAL_SPEED        15
 
 #define NORMAL_RPM          1000
 
-#define POSITION_DIFFERENCE 3600U
+#define POSITION_DIFFERENCE 3600
 #define POSITION_TOLERANCE  250
 
 #define MIDDLE_POSITION     0.5f
 
+#define ZERO_RPM_TIMEOUT    50
+#define ZERO_SPEED_GAP      50
 /*
 12v
 pwm 10 => 0.6 ~ 0.9
 pwm 20 => 0.8 ~ 1.5
 pwm 30 => 1.0 ~ 2.4
 */
-#if (CALIBRATING_SPEED == 15)
-    #define CURRENT_UPPER_LIMIT   1.4f
+// #if (CALIBRATING_SPEED == 15)
+    #define CURRENT_UPPER_LIMIT   3.0f
     #define CURRENT_LOWER_LIMIT   0.6f  
-#endif
+// #endif
 
 typedef enum {
     AUTO = 0,

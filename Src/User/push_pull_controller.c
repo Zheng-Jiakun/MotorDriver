@@ -22,28 +22,50 @@ void push_pull_init()
 
 void position_calibrate()
 {
-    static uint8_t stuck_flag = 0, hit_count = 0;
-    if (motor.current > CURRENT_UPPER_LIMIT && stuck_flag == 0)
-    {
-        motor.pwm = -motor.pwm;
+    static uint8_t stuck_flag = 0, zero_rpm_flag = 0;
+    static int8_t direction = 0;
+    static uint32_t stuck_tick = -1;
 
-        if (hit_count % 2)
+    if (abs(motor.rpm) == 0 && zero_rpm_flag == 0)
+    {
+        stuck_tick = HAL_GetTick();
+        zero_rpm_flag = 1;
+    }
+    else if (abs(motor.rpm) > 0)
+    {
+        zero_rpm_flag = 0;
+    }
+    else if (HAL_GetTick() - stuck_tick > ZERO_RPM_TIMEOUT && HAL_GetTick() - stuck_tick < ZERO_RPM_TIMEOUT+ZERO_SPEED_GAP && zero_rpm_flag == 1 && stuck_flag == 0)
+    {
+        if (motor.pwm < 0)
+        {
+            direction = -1;
             pull_limit_position = motor.position;
-        else
+        }
+        else if (motor.pwm > 0)
+        {
+            direction = 1;
             push_limit_position = motor.position;
+        }
+        motor.pwm = 0;
 
         stuck_flag = 1;
-        hit_count++;
     }
-    else if (motor.current < CURRENT_LOWER_LIMIT)
+    else if (HAL_GetTick() - stuck_tick > ZERO_RPM_TIMEOUT+ZERO_SPEED_GAP && stuck_flag == 1)
     {
         stuck_flag = 0;
+        if (direction == 1)
+            motor.pwm = -CALIBRATING_SPEED;
+        else if (direction == -1)
+            motor.pwm = CALIBRATING_SPEED;
+        // motor_change_phase();
+    }
 
-        if (push_limit_position - pull_limit_position > POSITION_DIFFERENCE)
-        {
-            calibrated_flag = 1;
-            motor_position = pull_limit_position + (push_limit_position - pull_limit_position) * MIDDLE_POSITION;
-        }
+    if (push_limit_position - pull_limit_position > POSITION_DIFFERENCE)
+    {
+        // motor.pwm = 0;
+        calibrated_flag = 1;
+        motor_position = pull_limit_position + (push_limit_position - pull_limit_position) * MIDDLE_POSITION;
     }
 }
 
@@ -100,15 +122,20 @@ void testing_thread()
             feedback_state = STOP;
             motor.pwm = 0;
         }
+
         if (speed_control == SPEED_UP)
         {
             if (running_pwm < 60)
                 running_pwm++;
+            if (motor.pwm > 0 && motor.pwm < running_pwm)
+                motor.pwm++;
         }
         else if (speed_control == SPEED_DOWN)
         {
             if (running_pwm > 3)
                 running_pwm--;
+            if (motor.pwm < 0 && motor.pwm > -running_pwm)
+                motor.pwm--;
         }
         HAL_Delay(20);
     }
@@ -137,14 +164,17 @@ void testing_thread()
         if (working_command == ADJUST_PUSHING)
         {
             motor.pwm = ADJUST_SPEED;
+            feedback_state = PUSHING;
         }
         else if (working_command == ADJUST_PULLING)
         {
             motor.pwm = -ADJUST_SPEED;
+            feedback_state = PULLING;
         }
         else if (working_command == ADJUST_STOP)
         {
             motor.pwm = 0;
+            feedback_state = STOP;
         }
     }
 }

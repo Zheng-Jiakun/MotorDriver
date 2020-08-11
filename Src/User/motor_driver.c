@@ -7,7 +7,6 @@ uint32_t hall_tick_10us;
 uint16_t drv8301_spi_rx_dat, drv8301_spi_tx_dat;
 uint16_t adc_result_raw[ADC_CHANNEL_NUM], adc_result[ADC_CHANNEL_NUM];
 float current_dc_offset;
-int8_t motor_pwm;
 
 pid_t motor_pid_current, motor_pid_speed, motor_pid_position;
 
@@ -42,7 +41,7 @@ void mosfet_control(uint8_t n, mosfet_state_t s)
         {
             HAL_TIM_PWM_Start(&htim1, TIM_CHANNEL_1);
             HAL_TIMEx_PWMN_Start(&htim1, TIM_CHANNEL_1);
-            __HAL_TIM_SET_COMPARE(&htim1, TIM_CHANNEL_1, PWM_DUTYCYCLE2PULSE(100 - abs(motor_pwm)));
+            __HAL_TIM_SET_COMPARE(&htim1, TIM_CHANNEL_1, PWM_DUTYCYCLE2PULSE(100 - abs(motor.pwm)));
         }
         else if (s == HIGH_OFF_LOW_OFF)
         {
@@ -62,7 +61,7 @@ void mosfet_control(uint8_t n, mosfet_state_t s)
         {
             HAL_TIM_PWM_Start(&htim1, TIM_CHANNEL_2);
             HAL_TIMEx_PWMN_Start(&htim1, TIM_CHANNEL_2);
-            __HAL_TIM_SET_COMPARE(&htim1, TIM_CHANNEL_2, PWM_DUTYCYCLE2PULSE(100 - abs(motor_pwm)));
+            __HAL_TIM_SET_COMPARE(&htim1, TIM_CHANNEL_2, PWM_DUTYCYCLE2PULSE(100 - abs(motor.pwm)));
         }
         else if (s == HIGH_OFF_LOW_OFF)
         {
@@ -82,7 +81,7 @@ void mosfet_control(uint8_t n, mosfet_state_t s)
         {
             HAL_TIM_PWM_Start(&htim1, TIM_CHANNEL_3);
             HAL_TIMEx_PWMN_Start(&htim1, TIM_CHANNEL_3);
-            __HAL_TIM_SET_COMPARE(&htim1, TIM_CHANNEL_3, PWM_DUTYCYCLE2PULSE(100 - abs(motor_pwm)));
+            __HAL_TIM_SET_COMPARE(&htim1, TIM_CHANNEL_3, PWM_DUTYCYCLE2PULSE(100 - abs(motor.pwm)));
         }
         else if (s == HIGH_OFF_LOW_OFF)
         {
@@ -203,13 +202,14 @@ void motor_stop()
 
     HAL_ADC_Stop_DMA(&hadc1);
     HAL_TIM_Base_Stop_IT(&htim3);
+    HAL_TIM_Base_Stop_IT(&htim4);
 }
 
 void motor_change_phase()
 {
-    if (motor_pwm >= 0)
+    if (motor.pwm >= 0)
         phase_select(hall_state_sequence[read_hall()]);
-    else if (motor_pwm < 0)
+    else if (motor.pwm < 0)
         phase_select(hall_state_sequence[7 - read_hall()]);
 }
 
@@ -217,9 +217,9 @@ uint32_t last_hall_tick = 0;
 void motor_get_speed()
 {
     static uint8_t filter_cnt = 0;
-    static uint32_t speed_rpm_tmp = 0;
+    static int32_t speed_rpm_tmp = 0;
 
-    static uint32_t last_position = 0;
+    static int32_t last_position = 0;
 
     speed_rpm_tmp += 60.0f / ((hall_tick_10us - last_hall_tick) / 100000.0f * 14.0f * 3.0f);
     if (filter_cnt >= SPEED_FILTER_SIZE)
@@ -243,15 +243,15 @@ void motor_check_0_speed()
     if (hall_tick_10us - last_hall_tick > ZERO_SPEED_TIMEOUT)
         motor.rpm = 0;
 
-    // if (motor_pwm == 0 && motor.rpm != 0)
+    // if (motor.pwm == 0 && motor.rpm != 0)
     //     phase_select(0);
-    // else if (motor.rpm == 0 && motor_pwm != 0)
+    // else if (motor.rpm == 0 && motor.pwm != 0)
     //     motor_change_phase();
 
     static int8_t last_pwm = 0;
-    if (last_pwm == 0 && motor_pwm != 0)
+    if (last_pwm != motor.pwm)
         motor_change_phase();
-    last_pwm = motor_pwm;
+    last_pwm = motor.pwm;
 }
 
 void motor_get_position()
@@ -319,12 +319,4 @@ void motor_speed_loop(float set)
 void motor_position_loop(float set)
 {
     motor.pwm = pid_calc(&motor_pid_position, motor.position, set);
-}
-
-void motor_adjust_pwm()
-{
-    if (motor_pwm < motor.pwm)
-        motor_pwm += 1; //(motor.pwm - motor_pwm) * 0.5f + 0.5f;
-    else if (motor_pwm > motor.pwm)
-        motor_pwm -= 1; //(motor_pwm - motor.pwm) * 0.5f + 0.5f;
 }

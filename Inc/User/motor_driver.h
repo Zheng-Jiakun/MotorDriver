@@ -17,7 +17,7 @@ extern uint32_t hall_tick_10us;
 
 #define ADC_MEANFILTER_SIZE         10
 #define SPEED_FILTER_SIZE           9
-#define ZERO_SPEED_TIMEOUT          10000U
+#define ZERO_SPEED_TIMEOUT          5000U
 
 #define DRV8301_MODE_W              0
 #define DRV8301_MODE_R              1
@@ -34,7 +34,7 @@ extern uint32_t hall_tick_10us;
 #define DRV8301_CURRENT_AMP_GAIN    80
 #define CURRENT_SAMPLE_RES          0.002f
 #define ADC2VOLTAGE(x)              ((x)/4095.0f*3.3f)
-#define CURRENT_LINEAR_OFFSET       -0.09f
+#define CURRENT_LINEAR_OFFSET       -0.0f
 #define DRV8301_VOLTAGE2CURRENT(x)  ((1.65f-(x))/(float)DRV8301_CURRENT_AMP_GAIN/(CURRENT_SAMPLE_RES)+CURRENT_LINEAR_OFFSET)
 // #define DRV8301_VOLTAGE2CURRENT(x)  (-10.068f*(x)+16.037+CURRENT_LINEAR_OFFSET)
 // #define DRV8301_VOLTAGE2CURRENT(x)  (-5.2726f*(x)+8.4632+CURRENT_LINEAR_OFFSET)
