@@ -11,8 +11,22 @@ void spi_sent()
     HAL_GPIO_WritePin(SPI1_CS_GPIO_Port, SPI1_CS_Pin, GPIO_PIN_SET);
 }
 
+uint8_t spi_get_parity()
+{
+    uint16_t data_buffer = spi_rx_data;
+    uint8_t cnt = 0;
+    while (data_buffer)
+    {
+        if (data_buffer & 0x0001)
+            cnt++;
+        data_buffer >>= 1;
+    }
+    return cnt % 2;
+}
+
 void spi_encode()
 {
+    spi_tx_data = 0x0000;
     static uint8_t frame_count = 0;
     switch (frame_count)
     {
@@ -42,6 +56,8 @@ void spi_encode()
     frame_count++;
     if (frame_count > 4)
         frame_count = 0;
+
+    spi_tx_data |= spi_get_parity() << (FRAME_DATA_LENGTH + FRAME_HEADER_LENGTH);
 }
 
 void spi_decode()
