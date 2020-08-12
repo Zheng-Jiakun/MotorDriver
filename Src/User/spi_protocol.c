@@ -11,15 +11,14 @@ void spi_sent()
     HAL_GPIO_WritePin(SPI1_CS_GPIO_Port, SPI1_CS_Pin, GPIO_PIN_SET);
 }
 
-uint8_t spi_get_parity()
+uint8_t spi_get_parity(uint16_t spi_data)
 {
-    uint16_t data_buffer = spi_rx_data;
     uint8_t cnt = 0;
-    while (data_buffer)
+    while (spi_data)
     {
-        if (data_buffer & 0x0001)
+        if (spi_data & 0x0001)
             cnt++;
-        data_buffer >>= 1;
+        spi_data >>= 1;
     }
     return cnt % 2;
 }
@@ -35,11 +34,11 @@ void spi_encode()
         break;
 
     case 1:
-        spi_tx_data = HEADER_ID_TEMPERATURE << FRAME_DATA_LENGTH | ((int16_t)(motor.temperature * 10) & 0xfff);
+        spi_tx_data = HEADER_ID_TEMPERATURE << FRAME_DATA_LENGTH | ((uint16_t)(motor.temperature * 10) & 0xfff);
         break;
 
     case 2:
-        spi_tx_data = HEADER_ID_RPM << FRAME_DATA_LENGTH | (abs(motor.rpm) & 0xfff);
+        spi_tx_data = HEADER_ID_RPM << FRAME_DATA_LENGTH | (testing_rpm & 0xfff);
         break;
 
     case 3:
@@ -57,32 +56,36 @@ void spi_encode()
     if (frame_count > 4)
         frame_count = 0;
 
-    spi_tx_data |= spi_get_parity() << (FRAME_DATA_LENGTH + FRAME_HEADER_LENGTH);
+    if (spi_get_parity(spi_tx_data) == 0)
+        spi_tx_data |= 1U << (FRAME_DATA_LENGTH + FRAME_HEADER_LENGTH);
 }
 
 void spi_decode()
 {
-    uint8_t header = (spi_rx_data >> FRAME_DATA_LENGTH) & 0xf;
-    uint16_t data = spi_rx_data & 0xfff;
-
-    switch (header)
+    if (spi_get_parity(spi_rx_data) == 1)
     {
-    case HEADER_ID_SPEED:
-        speed_control = data;
-        break;
+        uint8_t header = (spi_rx_data >> FRAME_DATA_LENGTH) & 0x7;
+        uint16_t data = spi_rx_data & 0xfff;
 
-    case HEADER_ID_MODE:
-        working_mode = data;
-        break;
+        switch (header)
+        {
+        case HEADER_ID_SPEED:
+            speed_control = data;
+            break;
 
-    case HEADER_ID_CMD:
-        working_command = data;
-        break;
+        case HEADER_ID_MODE:
+            working_mode = data;
+            break;
 
-    default:
-        break;
+        case HEADER_ID_CMD:
+            working_command = data;
+            break;
+
+        default:
+            break;
+        }
+        spi_rx_data = 0x0000;
     }
-    spi_rx_data = 0x0000;
 }
 
 void spi_timeout_handler()

@@ -73,6 +73,7 @@ extern feedback_state_t feedback_state;
 extern working_command_t working_command;
 extern speed_control_t speed_control;
 
+extern int16_t testing_rpm;
 extern int16_t push_limit_position, pull_limit_position;
 
 void push_pull_init();
