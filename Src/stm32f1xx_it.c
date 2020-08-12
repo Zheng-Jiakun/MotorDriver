@@ -244,8 +244,8 @@ void TIM3_IRQHandler(void)
   /* USER CODE BEGIN TIM3_IRQn 0 */
 
   motor_check_0_speed();
-  spi_encode_decode();
   motor_adjust_pwm();
+  spi_encode_decode();
   
   /* USER CODE END TIM3_IRQn 0 */
   HAL_TIM_IRQHandler(&htim3);

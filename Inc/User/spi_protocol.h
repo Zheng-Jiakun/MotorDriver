@@ -14,6 +14,7 @@ extern uint16_t spi_rx_data, spi_tx_data;
 #define HEADER_ID_STATUS                 4
 #define HEADER_ID_MODE                   5
 #define HEADER_ID_CMD                    6
+#define HEADER_ID_ERROR                  7
 
 #define FRAME_HEADER_LENGTH              4
 #define FRAME_DATA_LENGTH                12

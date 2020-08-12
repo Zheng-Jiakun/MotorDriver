@@ -32,11 +32,15 @@ void spi_encode()
         spi_tx_data = HEADER_ID_STATUS << FRAME_DATA_LENGTH | (feedback_state & 0xfff);
         break;
 
+    case 4:
+        spi_tx_data = HEADER_ID_ERROR << FRAME_DATA_LENGTH | (motor.error & 0xfff);
+        break;
+
     default:
         break;
     }
     frame_count++;
-    if (frame_count > 3)
+    if (frame_count > 4)
         frame_count = 0;
 }
 

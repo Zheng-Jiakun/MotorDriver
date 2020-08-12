@@ -8,7 +8,7 @@ uint16_t drv8301_spi_rx_dat, drv8301_spi_tx_dat;
 uint16_t adc_result_raw[ADC_CHANNEL_NUM], adc_result[ADC_CHANNEL_NUM];
 float current_dc_offset;
 
-pid_t motor_pid_current, motor_pid_speed, motor_pid_position;
+pid_t motor_pid_current;
 
 int8_t motor_pwm = 0;
 
@@ -188,10 +188,6 @@ void motor_start()
     drv8301_spi_sent();
 
     HAL_TIM_Base_Start_IT(&htim4);
-    
-    // pid_init(&motor_pid_current, 5, 50, 50, 50.0f, 5.0f, 0.5f);
-    // pid_init(&motor_pid_speed, 0, 50, 50, 0.03f, 0.01f, 0.005f);
-    // pid_init(&motor_pid_position, 400, 1200, 1000, 1.0f, 0.0f, 0.0f);
 
     // motor_switch_phase();
 }
@@ -202,9 +198,14 @@ void motor_stop()
 
     HAL_GPIO_WritePin(DRV8301_ENGATE_GPIO_Port, DRV8301_ENGATE_Pin, GPIO_PIN_RESET);
 
-    HAL_ADC_Stop_DMA(&hadc1);
-    HAL_TIM_Base_Stop_IT(&htim3);
-    HAL_TIM_Base_Stop_IT(&htim4);
+    // HAL_ADC_Stop_DMA(&hadc1);
+    // HAL_TIM_Base_Stop_IT(&htim3);
+    // HAL_TIM_Base_Stop_IT(&htim4);
+}
+
+void motor_restart()
+{
+    HAL_GPIO_WritePin(DRV8301_ENGATE_GPIO_Port, DRV8301_ENGATE_Pin, GPIO_PIN_SET);
 }
 
 void motor_switch_phase()
@@ -313,20 +314,53 @@ void motor_current_loop(float set)
     motor.pwm = pid_calc(&motor_pid_current, motor.current, set);
 }
 
-void motor_speed_loop(float set)
-{
-    motor.pwm = pid_calc(&motor_pid_speed, motor.rpm, set);
-}
-
-void motor_position_loop(float set)
-{
-    motor.pwm = pid_calc(&motor_pid_position, motor.position, set);
-}
-
-void motor_adjust_pwm ()
+void motor_adjust_pwm()
 {
     if (motor.pwm > motor_pwm)
         motor_pwm++;
     else if (motor.pwm < motor_pwm)
         motor_pwm--;
+}
+
+void error_handler()
+{
+    static uint32_t over_temperature_tick = 0;
+    static uint8_t over_temperature_flag = 0;
+    if (motor.temperature > MAX_TEMPERATURE && over_temperature_flag == 0)
+    {
+        over_temperature_flag = 1;
+        over_temperature_tick = HAL_GetTick();
+    }
+    else if (HAL_GetTick() - over_temperature_tick > OVER_TEMPERATURE_TIMEOUT && motor.temperature < MAX_TEMPERATURE && over_temperature_flag == 1)
+    {
+        over_temperature_flag = 0;
+        motor.error &= ~OVER_CURRENT_FLAG;
+        motor_restart();
+    }
+    else if (HAL_GetTick() - over_temperature_tick > OVER_TEMPERATURE_TIMEOUT && over_temperature_flag == 1)
+    {
+        motor.error |= OVER_CURRENT_FLAG;
+        motor_stop();
+        over_temperature_tick = HAL_GetTick();
+    }
+
+    static uint32_t over_current_tick = 0;
+    static uint8_t over_current_flag = 0;
+    if (motor.current > MAX_CURRENT && over_current_flag == 0)
+    {
+        over_current_flag = 1;
+        over_current_tick = HAL_GetTick();
+    }
+    else if (HAL_GetTick() - over_current_tick > OVER_CURRENT_TIMEOUT && motor.current < MAX_CURRENT && over_current_flag == 1)
+    {
+        over_current_flag = 0;
+        motor.error &= ~OVER_TEMPERATURE_FLAG;
+        motor_restart();
+    }
+    else if (HAL_GetTick() - over_current_tick > OVER_CURRENT_TIMEOUT && over_current_flag == 1)
+    {
+        motor.error |= OVER_TEMPERATURE_FLAG;
+        motor_stop();
+        over_current_tick = HAL_GetTick();
+    }
 }

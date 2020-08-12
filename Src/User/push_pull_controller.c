@@ -1,5 +1,7 @@
 #include "push_pull_controller.h"
 
+pid_t motor_pid_speed, motor_pid_position;
+
 uint8_t calibrated_flag = 0;
 int16_t push_limit_position, pull_limit_position;
 
@@ -15,7 +17,12 @@ int16_t motor_position = 0;
 
 void push_pull_init()
 {
-    pid_init(&motor_pid_speed, 0, 70, 70, 0.008f, 0.001f, 0.0008f);
+
+    // pid_init(&motor_pid_current, 5, 50, 50, 50.0f, 5.0f, 0.5f);
+    // pid_init(&motor_pid_speed, 0, 50, 50, 0.03f, 0.01f, 0.005f);
+    // pid_init(&motor_pid_position, 400, 1200, 1000, 1.0f, 0.0f, 0.0f);
+
+    pid_init(&motor_pid_speed, 0, 80, 80, 0.008f, 0.001f, 0.0008f);
     pid_init(&motor_pid_position, -30, 30, 50, 0.15f, 0.0001f, 0.01f);
 
     motor.pwm = CALIBRATING_SPEED;

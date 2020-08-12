@@ -4,15 +4,17 @@
 #include "main.h"
 #include "motor_driver.h"
 
+extern pid_t motor_pid_speed, motor_pid_position;
+
 extern int16_t motor_position;
 
 #define CALIBRATING_SPEED   30
 #define RUNNING_SPEED       40
-#define ADJUST_SPEED        10
+#define ADJUST_SPEED        15
 #define MANUAL_SPEED        15
 
 #define TESTING_RPM         1000
-#define MAX_RPM             2200
+#define MAX_RPM             2000
 #define MIN_RPM             500
 #define RPM_STEP            20
 
@@ -21,7 +23,7 @@ extern int16_t motor_position;
 
 #define MIDDLE_POSITION     0.5f
 
-#define ZERO_RPM_TIMEOUT    50
+#define ZERO_RPM_TIMEOUT    40
 #define ZERO_SPEED_GAP      50
 /*
 12v

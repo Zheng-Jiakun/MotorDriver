@@ -17,7 +17,7 @@ extern uint32_t hall_tick_10us;
 
 #define ADC_MEANFILTER_SIZE         10
 #define SPEED_FILTER_SIZE           9
-#define ZERO_SPEED_TIMEOUT          5000U
+#define ZERO_SPEED_TIMEOUT          500U        //5ms
 
 #define DRV8301_MODE_W              0
 #define DRV8301_MODE_R              1
@@ -51,6 +51,14 @@ extern uint32_t hall_tick_10us;
 
 #define LOOP_CONTROL_PERIOD         50
 
+#define MAX_TEMPERATURE             100
+#define MAX_CURRENT                 4.0f
+#define OVER_TEMPERATURE_TIMEOUT    5000
+#define OVER_CURRENT_TIMEOUT        5000
+
+#define OVER_CURRENT_FLAG           (1U << 0)
+#define OVER_TEMPERATURE_FLAG       (1U << 1)
+
 typedef enum {
     HIGH_ON_LOW_OFF = 0,
     HIGH_OFF_LOW_ON,
@@ -64,9 +72,10 @@ typedef struct {
     int32_t position;
     float degree;
     float temperature;
+    uint8_t error;
 } motor_t;
 
-extern pid_t motor_pid_current, motor_pid_speed, motor_pid_position;
+extern pid_t motor_pid_current;
 extern motor_t motor;
 
 void motor_start();
@@ -77,8 +86,9 @@ void motor_get_current();
 void motor_get_temperature();
 void motor_get_position();
 void motor_current_loop(float set);
-void motor_speed_loop(float set);
-void motor_position_loop(float set);
 void adc_filter();
 void motor_adjust_pwm();
+void error_handler();
+void motor_restart();
+
 #endif
