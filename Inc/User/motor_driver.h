@@ -43,8 +43,8 @@ extern uint32_t hall_tick_10us;
 #define ADC_CURRENT_CHANNEL         0
 #define ADC_TEMPERATURE_CHANNEL     1
 
-#define ADC2RES(x) ((x)*1e4 / (4095 - (x)))
-#define RES2TEMP(x) (3435.0f / ((3435.0f / 298.15f) - log(1e4 / (x))) - 273.15f)
+#define ADC2RES(x)                  ((x)*1e4 / (4095 - (x)))
+#define RES2TEMP(x)                 (3435.0f / ((3435.0f / 298.15f) - log(1e4 / (x))) - 273.15f)
 
 #define HALL2DEGREE(x)              (360.0f/42.0f*(x))
 #define DEGREE2HALL(x)              ((x)*42.0f/360.0f)

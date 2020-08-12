@@ -25,7 +25,7 @@ void spi_encode()
         break;
 
     case 2:
-        spi_tx_data = HEADER_ID_RPM << FRAME_DATA_LENGTH | ((motor.rpm + 2048) & 0xfff);
+        spi_tx_data = HEADER_ID_RPM << FRAME_DATA_LENGTH | (abs(motor.rpm) & 0xfff);
         break;
 
     case 3:
@@ -62,11 +62,30 @@ void spi_decode()
     default:
         break;
     }
+    spi_rx_data = 0x0000;
+}
+
+void spi_timeout_handler()
+{
+    static uint8_t spi_error_cnt = 0;
+
+    if (spi_rx_data == 0x0000)
+        spi_error_cnt++;
+    else
+        spi_error_cnt = 0;
+
+    if (spi_error_cnt > SPI_TIMEOUT)
+    {
+        speed_control = SPEED_HOLD;
+        working_mode = AUTO;
+        working_command = AUTO_STOP;
+    }
 }
 
 void spi_encode_decode()
 {
     spi_encode();
+    spi_timeout_handler();
     spi_decode();
     spi_sent();
 }

@@ -18,7 +18,10 @@ extern uint16_t spi_rx_data, spi_tx_data;
 #define FRAME_HEADER_LENGTH              4
 #define FRAME_DATA_LENGTH                12
 
+#define SPI_TIMEOUT                      100
+
 void spi_encode_decode();
 void spi_sent();
+void spi_timeout_handler();
 
 #endif

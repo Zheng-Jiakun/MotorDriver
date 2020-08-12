@@ -144,24 +144,32 @@ void testing_thread()
         //     if (motor.pwm < 0 && motor.pwm > -running_pwm)
         //         motor.pwm--;
         // }
+        //负的减速 正的加速
+        int8_t sign = motor_rpm > 0 ? 1 : -1;
+        int16_t temp_rpm = abs(motor_rpm);
+
         if (speed_control == SPEED_UP)
         {
-            if (testing_rpm < 2000)
-                testing_rpm += 20;
-            if (motor_rpm > 0 && motor_rpm < testing_rpm)
-                motor_rpm += 20;
-            else if (motor_rpm < 0 && motor_rpm > -testing_rpm)
-                motor_rpm -= 20;
+            if (testing_rpm < MAX_RPM)
+                testing_rpm += RPM_STEP;
+
+            if (temp_rpm < testing_rpm)
+            {
+                temp_rpm += RPM_STEP;
+                motor_rpm = temp_rpm * sign;
+            }
             // HAL_Delay(20);
         }
         else if (speed_control == SPEED_DOWN)
         {
-            if (testing_rpm > 0)
-                testing_rpm -= 20;
-            if (motor_rpm > 0)
-                motor_rpm -= 20;
-            else if (motor_rpm < 0 && motor_rpm > -testing_rpm)
-                motor_rpm += 20;
+            if (testing_rpm > MIN_RPM)
+                testing_rpm -= RPM_STEP;
+
+            if (temp_rpm > MIN_RPM)
+            {
+                temp_rpm -= RPM_STEP;
+                motor_rpm = temp_rpm * sign;
+            }
             // HAL_Delay(20);
         }
     }
