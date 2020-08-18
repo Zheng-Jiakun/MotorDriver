@@ -1,5 +1,7 @@
 #include "push_pull_controller.h"
 
+float middle_ratio = 0.6f;
+
 pid_t motor_pid_speed, motor_pid_position;
 
 uint8_t calibrated_flag = 0;
@@ -73,7 +75,7 @@ void position_calibrate()
     {
         // motor.pwm = 0;
         calibrated_flag = 1;
-        motor_position = pull_limit_position + (push_limit_position - pull_limit_position) * MIDDLE_POSITION;
+        motor_position = pull_limit_position + (push_limit_position - pull_limit_position) * middle_ratio;
     }
 }
 
@@ -120,12 +122,15 @@ void testing_thread()
     else if (working_mode == AUTO)
     {
         static uint8_t start_flag = 0;
-        if (working_command == AUTO_RUN)
+        if (working_command == AUTO_PUSHING || working_command == AUTO_PULLING)
         {
             feedback_state = RUNNING;
             if (start_flag == 0)
             {
-                motor_rpm = testing_rpm;
+                if (working_command == AUTO_PUSHING)
+                    motor_rpm = testing_rpm;
+                else if (working_command == AUTO_PULLING)
+                    motor_rpm = -testing_rpm;
                 start_flag = 1;
             }
             normal_testing();
@@ -135,6 +140,7 @@ void testing_thread()
             feedback_state = STOP;
             motor.pwm = 0;
             start_flag = 0;
+            HAL_Delay(LOOP_CONTROL_PERIOD);
         }
 
         // if (speed_control == SPEED_UP)
@@ -151,7 +157,7 @@ void testing_thread()
         //     if (motor.pwm < 0 && motor.pwm > -running_pwm)
         //         motor.pwm--;
         // }
-        //负的减速 正的加速
+
         int8_t sign = motor_rpm > 0 ? 1 : -1;
         int16_t temp_rpm = abs(motor_rpm);
 
@@ -189,7 +195,12 @@ void testing_thread()
         }
         else if (working_command == MANUAL_MIDDLE)
         {
-            motor_position = pull_limit_position + (push_limit_position - pull_limit_position) * MIDDLE_POSITION;
+            if (motor.position - pull_limit_position > (push_limit_position - pull_limit_position) * MIDDLE_POSITION_PUSH)
+                middle_ratio = MIDDLE_POSITION_PULL;
+            else if (motor.position - pull_limit_position < (push_limit_position - pull_limit_position) * MIDDLE_POSITION_PULL)
+                middle_ratio = MIDDLE_POSITION_PUSH;
+
+            motor_position = pull_limit_position + (push_limit_position - pull_limit_position) * middle_ratio;
             feedback_state = MIDDLE;
         }
         else if (working_command == MANUAL_PULLING)

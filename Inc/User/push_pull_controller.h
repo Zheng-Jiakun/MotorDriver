@@ -21,7 +21,9 @@ extern int16_t motor_position;
 #define POSITION_DIFFERENCE 3600
 #define POSITION_TOLERANCE  250
 
-#define MIDDLE_POSITION     0.5f
+#define MIDDLE_POSITION_PUSH      0.62f
+#define MIDDLE_POSITION_PULL      0.55f
+// #define MIDDLE_POSITION     0.7f
 
 #define ZERO_RPM_TIMEOUT    40
 #define ZERO_SPEED_GAP      50
@@ -44,7 +46,8 @@ typedef enum {
 
 typedef enum {
     AUTO_STOP = 0,
-    AUTO_RUN,
+    AUTO_PUSHING,
+    AUTO_PULLING,
     MANUAL_PUSHING = 10,
     MANUAL_MIDDLE,
     MANUAL_PULLING,
