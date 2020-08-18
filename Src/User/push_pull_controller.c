@@ -25,9 +25,19 @@ void push_pull_init()
     // pid_init(&motor_pid_position, 400, 1200, 1000, 1.0f, 0.0f, 0.0f);
 
     pid_init(&motor_pid_speed, 0, 80, 80, 0.008f, 0.001f, 0.0008f);
-    pid_init(&motor_pid_position, -30, 30, 50, 0.15f, 0.0001f, 0.01f);
+    pid_init(&motor_pid_position, -40, 40, 50, 0.15f, 0.0001f, 0.01f);
 
     motor.pwm = CALIBRATING_SPEED;
+}
+
+void get_middle_ratio()
+{
+    if (motor.position - pull_limit_position > (push_limit_position - pull_limit_position) * MIDDLE_POSITION_PUSH)
+        middle_ratio = MIDDLE_POSITION_PULL;
+    else if (motor.position - pull_limit_position < (push_limit_position - pull_limit_position) * MIDDLE_POSITION_PULL)
+        middle_ratio = MIDDLE_POSITION_PUSH;
+    // else
+    //     middle_ratio = (MIDDLE_POSITION_PULL + MIDDLE_POSITION_PUSH) / 2.0f;
 }
 
 void position_calibrate()
@@ -75,7 +85,8 @@ void position_calibrate()
     {
         // motor.pwm = 0;
         calibrated_flag = 1;
-        motor_position = pull_limit_position + (push_limit_position - pull_limit_position) * middle_ratio;
+        // get_middle_ratio();
+        // motor_position = pull_limit_position + (push_limit_position - pull_limit_position) * middle_ratio;
     }
 }
 
@@ -195,11 +206,7 @@ void testing_thread()
         }
         else if (working_command == MANUAL_MIDDLE)
         {
-            if (motor.position - pull_limit_position > (push_limit_position - pull_limit_position) * MIDDLE_POSITION_PUSH)
-                middle_ratio = MIDDLE_POSITION_PULL;
-            else if (motor.position - pull_limit_position < (push_limit_position - pull_limit_position) * MIDDLE_POSITION_PULL)
-                middle_ratio = MIDDLE_POSITION_PUSH;
-
+            get_middle_ratio();
             motor_position = pull_limit_position + (push_limit_position - pull_limit_position) * middle_ratio;
             feedback_state = MIDDLE;
         }

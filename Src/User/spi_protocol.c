@@ -30,7 +30,7 @@ void spi_encode()
     switch (frame_count)
     {
     case 0:
-        spi_tx_data = HEADER_ID_POSITION << FRAME_DATA_LENGTH | ((motor.position - pull_limit_position) & 0xfff);
+        spi_tx_data = HEADER_ID_POSITION << FRAME_DATA_LENGTH | ((uint16_t)((float)(motor.position - pull_limit_position) / (float)(push_limit_position - pull_limit_position) * 1000) & 0xfff);
         break;
 
     case 1:

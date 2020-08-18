@@ -19,7 +19,7 @@ extern int16_t motor_position;
 #define RPM_STEP            20
 
 #define POSITION_DIFFERENCE 3600
-#define POSITION_TOLERANCE  250
+#define POSITION_TOLERANCE  200
 
 #define MIDDLE_POSITION_PUSH      0.62f
 #define MIDDLE_POSITION_PULL      0.55f
