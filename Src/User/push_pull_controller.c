@@ -19,7 +19,6 @@ int16_t motor_position = 0;
 
 void push_pull_init()
 {
-
     // pid_init(&motor_pid_current, 5, 50, 50, 50.0f, 5.0f, 0.5f);
     // pid_init(&motor_pid_speed, 0, 50, 50, 0.03f, 0.01f, 0.005f);
     // pid_init(&motor_pid_position, 400, 1200, 1000, 1.0f, 0.0f, 0.0f);
@@ -94,14 +93,14 @@ void normal_testing()
 {
     static uint8_t stuck_flag = 0;
 
-    if (motor.position > (push_limit_position - POSITION_TOLERANCE) && stuck_flag == 0)
+    if (motor.position >= (push_limit_position - POSITION_TOLERANCE) && stuck_flag == 0)
     {
         // motor.pwm = -running_pwm;
         motor_rpm = -testing_rpm;
         // motor_position = pull_limit_position;
         stuck_flag = 1;
     }
-    else if ((motor.position < pull_limit_position + POSITION_TOLERANCE) && stuck_flag == 0)
+    else if ((motor.position <= pull_limit_position + POSITION_TOLERANCE) && stuck_flag == 0)
     {
         // motor.pwm = running_pwm;
         motor_rpm = testing_rpm;
